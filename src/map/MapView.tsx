@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { Protocol } from 'pmtiles';
 import type { StopInfo } from '../types';
 
 export const MAP_STYLES = {
   ign: { label: 'IGN', url: 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json' },
-  osm: { label: 'OSM Liberty', url: 'https://maputnik.github.io/osm-liberty/style.json' },
+  enliberte: { label: 'Tuiles en libert\u00e9', url: 'https://tuiles.enliberte.fr/styles/bright.json' },
 } as const;
 
 export type MapStyleKey = keyof typeof MAP_STYLES;
@@ -37,6 +38,13 @@ export function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const waypointMarkersRef = useRef<maplibregl.Marker[]>([]);
+
+  // Register pmtiles protocol once
+  useEffect(() => {
+    const protocol = new Protocol();
+    maplibregl.addProtocol('pmtiles', protocol.tile);
+    return () => { maplibregl.removeProtocol('pmtiles'); };
+  }, []);
 
   // Initialize map
   useEffect(() => {
