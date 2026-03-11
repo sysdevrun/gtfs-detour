@@ -19,28 +19,70 @@ const api = {
     gtfs = await GtfsSqlJs.fromZipData(new Uint8Array(zipData), { SQL });
   },
 
-  getUniqueTripsShortNames(): string[] {
+  getRoutes() {
     const db = gtfs.getDatabase();
-    const stmt = db.prepare('SELECT DISTINCT trip_short_name FROM trips WHERE trip_short_name IS NOT NULL AND trip_short_name != \'\' ORDER BY trip_short_name');
-    const names: string[] = [];
+    const stmt = db.prepare(`
+      SELECT route_id, route_short_name, route_long_name,
+             COALESCE(route_color, '') as route_color,
+             COALESCE(route_text_color, '') as route_text_color
+      FROM routes
+      ORDER BY route_short_name, route_long_name
+    `);
+    const routes: Array<{
+      route_id: string;
+      route_short_name: string;
+      route_long_name: string;
+      route_color: string;
+      route_text_color: string;
+    }> = [];
     while (stmt.step()) {
-      names.push(stmt.getAsObject().trip_short_name as string);
+      routes.push(stmt.getAsObject() as never);
     }
     stmt.free();
-    return names;
+    return routes;
   },
 
-  getTripsByShortName(shortName: string) {
+  getTripGroupsForRoute(routeId: string) {
+    const db = gtfs.getDatabase();
+    const stmt = db.prepare(`
+      SELECT direction_id,
+             COALESCE(trip_headsign, '') as trip_headsign,
+             COALESCE(trip_short_name, '') as trip_short_name,
+             COUNT(*) as count
+      FROM trips
+      WHERE route_id = ?
+      GROUP BY direction_id, trip_headsign, trip_short_name
+      ORDER BY direction_id, trip_headsign, trip_short_name
+    `);
+    stmt.bind([routeId]);
+    const groups: Array<{
+      direction_id: number;
+      trip_headsign: string;
+      trip_short_name: string;
+      count: number;
+    }> = [];
+    while (stmt.step()) {
+      groups.push(stmt.getAsObject() as never);
+    }
+    stmt.free();
+    return groups;
+  },
+
+  getTripsForGroup(routeId: string, directionId: number, tripHeadsign: string, tripShortName: string) {
     const db = gtfs.getDatabase();
     const stmt = db.prepare(`
       SELECT t.trip_id, t.trip_short_name, t.direction_id, t.trip_headsign, t.shape_id,
              r.route_short_name, r.route_long_name
       FROM trips t
       JOIN routes r ON t.route_id = r.route_id
-      WHERE t.trip_short_name = ?
+      WHERE t.route_id = ?
+        AND t.direction_id = ?
+        AND COALESCE(t.trip_headsign, '') = ?
+        AND COALESCE(t.trip_short_name, '') = ?
+      ORDER BY t.trip_id
       LIMIT 50
     `);
-    stmt.bind([shortName]);
+    stmt.bind([routeId, directionId, tripHeadsign, tripShortName]);
     const trips: Array<{
       trip_id: string;
       trip_short_name: string;

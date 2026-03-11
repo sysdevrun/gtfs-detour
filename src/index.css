@@ -115,6 +115,130 @@ body {
   margin-top: auto;
 }
 
+/* Route list */
+.route-filter {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  margin-bottom: 8px;
+}
+
+.route-filter:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.route-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.route-item:hover {
+  border-color: #3498db;
+  background: #e8f4fd;
+}
+
+.route-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: #666;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.route-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.selected-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.selected-route .route-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.selected-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.direction-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.direction-section h4 {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.trip-count {
+  float: right;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.trip-id {
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.trip-shape {
+  float: right;
+  color: #999;
+  font-size: 0.75rem;
+}
+
+.no-results {
+  padding: 12px;
+  text-align: center;
+  color: #999;
+  font-size: 0.85rem;
+}
+
 /* Autocomplete */
 .autocomplete {
   position: relative;

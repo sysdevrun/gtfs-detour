@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Comlink from 'comlink';
 import type { GtfsWorkerApi } from './worker/gtfs-worker';
 import { GtfsPickerPanel } from './components/GtfsPickerPanel';
-import { TripSearch } from './components/TripSearch';
+import { TripSelector } from './components/TripSelector';
 import { StopSelector } from './components/StopSelector';
 import { DetourControls } from './components/DetourControls';
 import { DistanceInfo } from './components/DistanceInfo';
@@ -162,7 +162,7 @@ function App() {
         )}
 
         {feedName && worker && (
-          <TripSearch worker={worker} onTripSelected={setSelectedTrip} />
+          <TripSelector worker={worker} onTripSelected={setSelectedTrip} />
         )}
 
         {selectedTrip && (
