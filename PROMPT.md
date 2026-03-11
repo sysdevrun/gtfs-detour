@@ -51,4 +51,8 @@ Add git@github.com:sysdevrun/gtfs-detour.git as git repo, commit and push
 Replace osm-liberty by https://tuiles.enliberte.fr/styles/bright.json Install pmtiles and add pmtiles protocol as it's required for tuiles en libertes (see
   https://tuiles.enliberte.fr/ )
 
-  
+### 4th prompt
+❯ Replace trip selection.
+  List routes (with correct route short name with correct colors), and let the user select a route.
+  Then display for each name for outward and inward, let the user selects
+  Then shows trips for the selection of the trip
