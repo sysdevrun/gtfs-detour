@@ -1,5 +1,7 @@
 # GTFS Detour Planner
 
+**[Live Demo](https://sysdevrun.github.io/gtfs-detour/)**
+
 A browser-based tool to visualize GTFS transit trip shapes on a map, define a detour segment between two stops, and compute an alternative road route via the Geoportail routing API. Compare the original segment distance vs. the detour distance.
 
 ## Features
