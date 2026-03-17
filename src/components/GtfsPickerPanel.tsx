@@ -5,7 +5,7 @@ import { maybeProxy } from '../lib/proxy';
 
 interface Props {
   onLoading: (label: string | null) => void;
-  onLoaded: (feedName: string) => void;
+  onLoaded: (feedName: string, url?: string) => void;
   onReset: () => void;
   worker: {
     loadFromUrl: (url: string, wasmUrl: string) => Promise<void>;
@@ -31,7 +31,7 @@ export function GtfsPickerPanel({ onLoading, onLoaded, onReset, worker, wasmUrl,
         onLoading(result.title);
         const url = maybeProxy(result.url);
         await worker.loadFromUrl(url, wasmUrl);
-        onLoaded(result.title);
+        onLoaded(result.title, result.url);
       }
     } catch (err) {
       console.error('Failed to load GTFS:', err);
