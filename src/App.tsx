@@ -182,9 +182,15 @@ function App() {
   };
 
   useEffect(() => {
-    document.title = t('appTitle');
+    const parts = [t('appTitle')];
+    if (feedName) parts.push(feedName);
+    if (selectedTrip) {
+      const tripParts = [selectedTrip.route_short_name, selectedTrip.trip_short_name].filter(Boolean);
+      if (tripParts.length > 0) parts.push(tripParts.join(' — '));
+    }
+    document.title = parts.join(' · ');
     document.documentElement.lang = i18n.language;
-  }, [t, i18n.language]);
+  }, [t, i18n.language, feedName, selectedTrip]);
 
   const worker = workerReady ? workerRef.current : null;
 
