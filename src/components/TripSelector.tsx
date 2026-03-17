@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { RouteInfo, TripGroup, TripInfo } from '../types';
 
 interface Props {
@@ -28,6 +29,7 @@ function contrastColor(bgColor: string, textColor: string): string {
 }
 
 export function TripSelector({ worker, onTripSelected }: Props) {
+  const { t } = useTranslation();
   const [routes, setRoutes] = useState<RouteInfo[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<RouteInfo | null>(null);
   const [tripGroups, setTripGroups] = useState<TripGroup[]>([]);
@@ -87,7 +89,7 @@ export function TripSelector({ worker, onTripSelected }: Props) {
 
   return (
     <div className="panel">
-      <h3>2. Select Trip</h3>
+      <h3>{t('trip.heading')}</h3>
 
       {/* Step 1: Route selection */}
       {!selectedRoute && (
@@ -95,7 +97,7 @@ export function TripSelector({ worker, onTripSelected }: Props) {
           <input
             type="text"
             className="route-filter"
-            placeholder="Filter routes..."
+            placeholder={t('trip.filterPlaceholder')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -120,7 +122,7 @@ export function TripSelector({ worker, onTripSelected }: Props) {
               );
             })}
             {filteredRoutes.length === 0 && (
-              <div className="no-results">No routes found</div>
+              <div className="no-results">{t('trip.noRoutes')}</div>
             )}
           </div>
         </>
@@ -140,7 +142,7 @@ export function TripSelector({ worker, onTripSelected }: Props) {
           </span>
           <span className="route-name">{selectedRoute.route_long_name}</span>
           <button className="btn-sm" onClick={() => { setSelectedRoute(null); setSelectedGroup(null); setTrips([]); }}>
-            Change
+            {t('trip.change')}
           </button>
         </div>
       )}
@@ -150,7 +152,7 @@ export function TripSelector({ worker, onTripSelected }: Props) {
         <div className="direction-groups">
           {outward.length > 0 && (
             <div className="direction-section">
-              <h4>Outward (direction 0)</h4>
+              <h4>{t('trip.outward')}</h4>
               {outward.map((g, i) => (
                 <button
                   key={`out-${i}`}
@@ -158,15 +160,15 @@ export function TripSelector({ worker, onTripSelected }: Props) {
                   onClick={() => setSelectedGroup(g)}
                 >
                   {g.trip_short_name && <strong>{g.trip_short_name} </strong>}
-                  {g.trip_headsign || 'No headsign'}
-                  <span className="trip-count">{g.count} trip{g.count > 1 ? 's' : ''}</span>
+                  {g.trip_headsign || t('trip.noHeadsign')}
+                  <span className="trip-count">{t('trip.tripCount', { count: g.count })}</span>
                 </button>
               ))}
             </div>
           )}
           {inward.length > 0 && (
             <div className="direction-section">
-              <h4>Inward (direction 1)</h4>
+              <h4>{t('trip.inward')}</h4>
               {inward.map((g, i) => (
                 <button
                   key={`in-${i}`}
@@ -174,8 +176,8 @@ export function TripSelector({ worker, onTripSelected }: Props) {
                   onClick={() => setSelectedGroup(g)}
                 >
                   {g.trip_short_name && <strong>{g.trip_short_name} </strong>}
-                  {g.trip_headsign || 'No headsign'}
-                  <span className="trip-count">{g.count} trip{g.count > 1 ? 's' : ''}</span>
+                  {g.trip_headsign || t('trip.noHeadsign')}
+                  <span className="trip-count">{t('trip.tripCount', { count: g.count })}</span>
                 </button>
               ))}
             </div>
@@ -187,11 +189,11 @@ export function TripSelector({ worker, onTripSelected }: Props) {
       {selectedGroup && (
         <div className="selected-group">
           <span>
-            Dir {selectedGroup.direction_id}: {selectedGroup.trip_short_name && <strong>{selectedGroup.trip_short_name} </strong>}
-            {selectedGroup.trip_headsign || 'No headsign'}
+            {t('trip.dirPrefix', { id: selectedGroup.direction_id })} {selectedGroup.trip_short_name && <strong>{selectedGroup.trip_short_name} </strong>}
+            {selectedGroup.trip_headsign || t('trip.noHeadsign')}
           </span>
           <button className="btn-sm" onClick={() => { setSelectedGroup(null); setTrips([]); }}>
-            Change
+            {t('trip.change')}
           </button>
         </div>
       )}
@@ -199,15 +201,15 @@ export function TripSelector({ worker, onTripSelected }: Props) {
       {/* Step 3: Trip selection */}
       {selectedGroup && trips.length > 1 && (
         <div className="trip-list">
-          <p>Select a trip:</p>
-          {trips.map((t) => (
+          <p>{t('trip.selectTrip')}</p>
+          {trips.map((trip) => (
             <button
-              key={t.trip_id}
+              key={trip.trip_id}
               className="trip-option"
-              onClick={() => onTripSelected(t)}
+              onClick={() => onTripSelected(trip)}
             >
-              <span className="trip-id">{t.trip_id}</span>
-              {t.shape_id && <span className="trip-shape">shape: {t.shape_id}</span>}
+              <span className="trip-id">{trip.trip_id}</span>
+              {trip.shape_id && <span className="trip-shape">{t('trip.shape', { id: trip.shape_id })}</span>}
             </button>
           ))}
         </div>

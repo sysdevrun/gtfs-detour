@@ -1,31 +1,34 @@
+import { useTranslation } from 'react-i18next';
+
 interface Props {
   segmentDistance: number | null;
   detourDistance: number | null;
 }
 
 export function DistanceInfo({ segmentDistance, detourDistance }: Props) {
+  const { t } = useTranslation();
   if (segmentDistance === null) return null;
 
   const net = detourDistance !== null ? detourDistance - segmentDistance : null;
 
   return (
     <div className="panel distance-info">
-      <h3>4. Distances</h3>
+      <h3>{t('distance.heading')}</h3>
       <div className="distance-row">
-        <span>Original segment:</span>
-        <strong>{segmentDistance.toFixed(2)} km</strong>
+        <span>{t('distance.original')}</span>
+        <strong>{t('distance.km', { value: segmentDistance.toFixed(2) })}</strong>
       </div>
       {detourDistance !== null && (
         <>
           <div className="distance-row">
-            <span>Detour route:</span>
-            <strong>{detourDistance.toFixed(2)} km</strong>
+            <span>{t('distance.detour')}</span>
+            <strong>{t('distance.km', { value: detourDistance.toFixed(2) })}</strong>
           </div>
           <div className={`distance-row net ${net! > 0 ? 'positive' : 'negative'}`}>
-            <span>Net difference:</span>
+            <span>{t('distance.net')}</span>
             <strong>
               {net! > 0 ? '+' : ''}
-              {net!.toFixed(2)} km
+              {t('distance.km', { value: net!.toFixed(2) })}
             </strong>
           </div>
         </>
