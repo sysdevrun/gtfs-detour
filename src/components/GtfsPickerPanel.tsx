@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as Comlink from 'comlink';
 import { GtfsSelector, type GtfsSelectionResult } from 'react-gtfs-selector';
 import 'react-gtfs-selector/style.css';
 import { maybeProxy } from '../lib/proxy';
@@ -6,31 +7,34 @@ import { maybeProxy } from '../lib/proxy';
 interface Props {
   onLoading: (label: string | null) => void;
   onLoaded: (feedName: string, url?: string) => void;
+  onProgress: (percent: number) => void;
   onReset: () => void;
   worker: {
-    loadFromUrl: (url: string, wasmUrl: string) => Promise<void>;
-    loadFromData: (data: ArrayBuffer, wasmUrl: string) => Promise<void>;
+    loadFromUrl: (url: string, wasmUrl: string, onProgress?: (p: number) => void) => Promise<void>;
+    loadFromData: (data: ArrayBuffer, wasmUrl: string, onProgress?: (p: number) => void) => Promise<void>;
   };
   wasmUrl: string;
   loading: boolean;
   feedName: string | null;
+  progress: number | null;
 }
 
-export function GtfsPickerPanel({ onLoading, onLoaded, onReset, worker, wasmUrl, loading, feedName }: Props) {
+export function GtfsPickerPanel({ onLoading, onLoaded, onProgress, onReset, worker, wasmUrl, loading, feedName, progress }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const handleSelect = async (result: GtfsSelectionResult) => {
     setError(null);
     try {
+      const progressProxy = Comlink.proxy((p: number) => onProgress(p));
       if (result.type === 'file') {
         onLoading(result.fileName);
         const buffer = await result.blob.arrayBuffer();
-        await worker.loadFromData(buffer, wasmUrl);
+        await worker.loadFromData(buffer, wasmUrl, progressProxy);
         onLoaded(result.fileName);
       } else {
         onLoading(result.title);
         const url = maybeProxy(result.url);
-        await worker.loadFromUrl(url, wasmUrl);
+        await worker.loadFromUrl(url, wasmUrl, progressProxy);
         onLoaded(result.title, result.url);
       }
     } catch (err) {
@@ -54,7 +58,14 @@ export function GtfsPickerPanel({ onLoading, onLoaded, onReset, worker, wasmUrl,
     return (
       <div className="panel loading-panel">
         <h3>1. Select GTFS Feed</h3>
-        <div className="loading-indicator">Loading...</div>
+        <div className="loading-indicator">
+          Loading...{progress != null && ` ${Math.round(progress)}%`}
+        </div>
+        {progress != null && (
+          <div className="progress-bar">
+            <div className="progress-bar-fill" style={{ width: `${Math.round(progress)}%` }} />
+          </div>
+        )}
         <button className="btn-sm" onClick={() => {
           onLoading(null);
         }}>Cancel</button>

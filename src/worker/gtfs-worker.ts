@@ -14,9 +14,12 @@ const api = {
     });
   },
 
-  async loadFromData(zipData: ArrayBuffer, wasmUrl: string) {
+  async loadFromData(zipData: ArrayBuffer, wasmUrl: string, onProgress?: (p: number) => void) {
     const SQL = await initSqlJs({ locateFile: () => wasmUrl });
-    gtfs = await GtfsSqlJs.fromZipData(new Uint8Array(zipData), { SQL });
+    gtfs = await GtfsSqlJs.fromZipData(new Uint8Array(zipData), {
+      SQL,
+      onProgress: onProgress ? Comlink.proxy((info: { percentComplete: number }) => onProgress(info.percentComplete)) : undefined,
+    });
   },
 
   getRoutes() {
