@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as Comlink from 'comlink';
 import type { GtfsWorkerApi } from './worker/gtfs-worker';
 import { GtfsPickerPanel } from './components/GtfsPickerPanel';
@@ -9,10 +9,14 @@ import { DistanceInfo } from './components/DistanceInfo';
 import { MapView, MAP_STYLES, type MapStyleKey } from './map/MapView';
 import { sliceShape, lineLength } from './lib/geometry';
 import { computeItinerary } from './lib/routing';
+import { maybeProxy } from './lib/proxy';
+import { parseHash, updateHash } from './lib/hash-config';
 import type { TripInfo, StopInfo } from './types';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 function App() {
+  const initialConfig = useMemo(() => parseHash(), []);
+
   const workerRef = useRef<Comlink.Remote<GtfsWorkerApi> | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
   const [gtfsLoading, setGtfsLoading] = useState(false);
@@ -33,7 +37,11 @@ function App() {
   const [detourDistance, setDetourDistance] = useState<number | null>(null);
   const [computing, setComputing] = useState(false);
 
-  const [mapStyle, setMapStyle] = useState<MapStyleKey>('ign');
+  const [mapStyle, setMapStyleState] = useState<MapStyleKey>(
+    initialConfig.tiles && initialConfig.tiles in MAP_STYLES
+      ? initialConfig.tiles as MapStyleKey
+      : 'ign'
+  );
 
   // Init worker
   useEffect(() => {
@@ -41,6 +49,29 @@ function App() {
     workerRef.current = Comlink.wrap<GtfsWorkerApi>(w);
     setWorkerReady(true);
     return () => { w.terminate(); workerRef.current = null; setWorkerReady(false); };
+  }, []);
+
+  // Auto-load GTFS from URL hash
+  useEffect(() => {
+    if (!workerReady || !workerRef.current || !initialConfig.gtfs) return;
+    setGtfsLoading(true);
+    const proxiedUrl = maybeProxy(initialConfig.gtfs);
+    workerRef.current.loadFromUrl(proxiedUrl, sqlWasmUrl)
+      .then(() => {
+        setGtfsLoading(false);
+        setFeedName(initialConfig.title || initialConfig.gtfs!);
+      })
+      .catch((err: unknown) => {
+        console.error('Failed to auto-load GTFS from hash:', err);
+        setGtfsLoading(false);
+        updateHash({ gtfs: undefined, title: undefined });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workerReady]);
+
+  const setMapStyle = useCallback((key: MapStyleKey) => {
+    setMapStyleState(key);
+    updateHash({ tiles: key === 'ign' ? undefined : key });
   }, []);
 
   // When trip selected, load shape + stops
@@ -122,6 +153,7 @@ function App() {
   };
 
   const handleGtfsReset = () => {
+    updateHash({ gtfs: undefined, title: undefined });
     setFeedName(null);
     setGtfsLoading(false);
     setSelectedTrip(null);
@@ -154,7 +186,15 @@ function App() {
             worker={worker}
             wasmUrl={sqlWasmUrl}
             onLoading={(label) => setGtfsLoading(!!label)}
-            onLoaded={(name) => { setGtfsLoading(false); setFeedName(name); }}
+            onLoaded={(name, url) => {
+              setGtfsLoading(false);
+              setFeedName(name);
+              if (url) {
+                updateHash({ gtfs: url, title: name });
+              } else {
+                updateHash({ gtfs: undefined, title: undefined });
+              }
+            }}
             onReset={handleGtfsReset}
             loading={gtfsLoading}
             feedName={feedName}
