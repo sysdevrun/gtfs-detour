@@ -20,6 +20,7 @@ function App() {
   const workerRef = useRef<Comlink.Remote<GtfsWorkerApi> | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
   const [gtfsLoading, setGtfsLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState<number | null>(null);
   const [feedName, setFeedName] = useState<string | null>(null);
 
   const [selectedTrip, setSelectedTrip] = useState<TripInfo | null>(null);
@@ -55,15 +56,18 @@ function App() {
   useEffect(() => {
     if (!workerReady || !workerRef.current || !initialConfig.gtfs) return;
     setGtfsLoading(true);
+    setLoadProgress(null);
     const proxiedUrl = maybeProxy(initialConfig.gtfs);
-    workerRef.current.loadFromUrl(proxiedUrl, sqlWasmUrl)
+    workerRef.current.loadFromUrl(proxiedUrl, sqlWasmUrl, Comlink.proxy((p: number) => setLoadProgress(p)))
       .then(() => {
         setGtfsLoading(false);
+        setLoadProgress(null);
         setFeedName(initialConfig.title || initialConfig.gtfs!);
       })
       .catch((err: unknown) => {
         console.error('Failed to auto-load GTFS from hash:', err);
         setGtfsLoading(false);
+        setLoadProgress(null);
         updateHash({ gtfs: undefined, title: undefined });
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,6 +160,7 @@ function App() {
     updateHash({ gtfs: undefined, title: undefined });
     setFeedName(null);
     setGtfsLoading(false);
+    setLoadProgress(null);
     setSelectedTrip(null);
     setStops([]);
     setShapeGeojson(null);
@@ -185,9 +190,13 @@ function App() {
           <GtfsPickerPanel
             worker={worker}
             wasmUrl={sqlWasmUrl}
-            onLoading={(label) => setGtfsLoading(!!label)}
+            onLoading={(label) => {
+              setGtfsLoading(!!label);
+              if (!label) setLoadProgress(null);
+            }}
             onLoaded={(name, url) => {
               setGtfsLoading(false);
+              setLoadProgress(null);
               setFeedName(name);
               if (url) {
                 updateHash({ gtfs: url, title: name });
@@ -195,9 +204,11 @@ function App() {
                 updateHash({ gtfs: undefined, title: undefined });
               }
             }}
+            onProgress={setLoadProgress}
             onReset={handleGtfsReset}
             loading={gtfsLoading}
             feedName={feedName}
+            progress={loadProgress}
           />
         )}
 
