@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Props {
   waypoints: [number, number][];
   onClearWaypoints: () => void;
@@ -15,18 +17,19 @@ export function DetourControls({
   computing,
   hasStartEnd,
 }: Props) {
+  const { t } = useTranslation();
   if (!hasStartEnd) return null;
 
   return (
     <div className="panel">
-      <h3>5. Alternative Route</h3>
-      <p className="hint">Click on the map to add waypoints for the detour route.</p>
+      <h3>{t('detour.heading')}</h3>
+      <p className="hint">{t('detour.hint')}</p>
       {waypoints.length > 0 && (
         <div className="waypoint-list">
           {waypoints.map((wp, i) => (
             <div key={i} className="waypoint-item">
               <span>
-                WP{i + 1}: {wp[1].toFixed(5)}, {wp[0].toFixed(5)}
+                {t('detour.wpLabel', { index: i + 1 })}: {wp[1].toFixed(5)}, {wp[0].toFixed(5)}
               </span>
               <button className="btn-sm" onClick={() => onRemoveWaypoint(i)}>
                 &times;
@@ -34,12 +37,12 @@ export function DetourControls({
             </div>
           ))}
           <button className="btn-sm" onClick={onClearWaypoints}>
-            Clear all
+            {t('detour.clearAll')}
           </button>
         </div>
       )}
       <button className="btn-primary" onClick={onComputeRoute} disabled={computing}>
-        {computing ? 'Computing...' : 'Compute detour route'}
+        {computing ? t('detour.computing') : t('detour.compute')}
       </button>
     </div>
   );

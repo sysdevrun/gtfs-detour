@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as Comlink from 'comlink';
 import { GtfsSelector, type GtfsSelectionResult } from 'react-gtfs-selector';
 import 'react-gtfs-selector/style.css';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function GtfsPickerPanel({ onLoading, onLoaded, onProgress, onReset, worker, wasmUrl, loading, feedName, progress }: Props) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
 
   const handleSelect = async (result: GtfsSelectionResult) => {
@@ -47,9 +49,9 @@ export function GtfsPickerPanel({ onLoading, onLoaded, onProgress, onReset, work
   if (feedName) {
     return (
       <div className="panel feed-loaded">
-        <h3>1. GTFS Feed</h3>
+        <h3>{t('gtfs.heading')}</h3>
         <div className="feed-name">{feedName}</div>
-        <button className="btn-sm" onClick={onReset}>Change feed</button>
+        <button className="btn-sm" onClick={onReset}>{t('gtfs.changeFeed')}</button>
       </div>
     );
   }
@@ -57,9 +59,9 @@ export function GtfsPickerPanel({ onLoading, onLoaded, onProgress, onReset, work
   if (loading) {
     return (
       <div className="panel loading-panel">
-        <h3>1. Select GTFS Feed</h3>
+        <h3>{t('gtfs.headingSelect')}</h3>
         <div className="loading-indicator">
-          Loading...{progress != null && ` ${Math.round(progress)}%`}
+          {t('gtfs.loading')}{progress != null && ` ${Math.round(progress)}%`}
         </div>
         {progress != null && (
           <div className="progress-bar">
@@ -68,14 +70,14 @@ export function GtfsPickerPanel({ onLoading, onLoaded, onProgress, onReset, work
         )}
         <button className="btn-sm" onClick={() => {
           onLoading(null);
-        }}>Cancel</button>
+        }}>{t('gtfs.cancel')}</button>
       </div>
     );
   }
 
   return (
     <div className="panel">
-      <h3>1. Select GTFS Feed</h3>
+      <h3>{t('gtfs.headingSelect')}</h3>
       {error && <div className="error-msg">{error}</div>}
       <GtfsSelector onSelect={handleSelect} />
     </div>

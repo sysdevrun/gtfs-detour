@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as Comlink from 'comlink';
 import type { GtfsWorkerApi } from './worker/gtfs-worker';
 import { GtfsPickerPanel } from './components/GtfsPickerPanel';
@@ -15,6 +16,7 @@ import type { TripInfo, StopInfo } from './types';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 function App() {
+  const { t, i18n } = useTranslation();
   const initialConfig = useMemo(() => parseHash(), []);
 
   const workerRef = useRef<Comlink.Remote<GtfsWorkerApi> | null>(null);
@@ -150,7 +152,7 @@ function App() {
       setDetourDistance(result.distance);
     } catch (err) {
       console.error('Routing error:', err);
-      alert('Routing failed: ' + (err as Error).message);
+      alert(t('routingFailed', { message: (err as Error).message }));
     } finally {
       setComputing(false);
     }
@@ -179,12 +181,23 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const parts = [t('appTitle')];
+    if (feedName) parts.push(feedName);
+    if (selectedTrip) {
+      const tripParts = [selectedTrip.route_short_name, selectedTrip.trip_short_name].filter(Boolean);
+      if (tripParts.length > 0) parts.push(tripParts.join(' — '));
+    }
+    document.title = parts.join(' · ');
+    document.documentElement.lang = i18n.language;
+  }, [t, i18n.language, feedName, selectedTrip]);
+
   const worker = workerReady ? workerRef.current : null;
 
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <h2>GTFS Detour Planner</h2>
+        <h2>{t('appTitle')}</h2>
 
         {worker && (
           <GtfsPickerPanel
@@ -242,7 +255,7 @@ function App() {
 
         <div className="panel map-style-panel">
           <label>
-            Map style:
+            {t('mapStyle')}
             <select value={mapStyle} onChange={(e) => setMapStyle(e.target.value as MapStyleKey)}>
               {Object.entries(MAP_STYLES).map(([key, { label }]) => (
                 <option key={key} value={key}>{label}</option>

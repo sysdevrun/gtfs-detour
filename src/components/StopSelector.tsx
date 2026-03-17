@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { StopInfo } from '../types';
 
 interface Props {
@@ -9,13 +10,14 @@ interface Props {
 }
 
 export function StopSelector({ stops, startStop, endStop, onStartChange, onEndChange }: Props) {
+  const { t } = useTranslation();
   if (stops.length === 0) return null;
 
   return (
     <div className="panel">
-      <h3>3. Select Detour Stops</h3>
+      <h3>{t('stops.heading')}</h3>
       <label>
-        Start of detour:
+        {t('stops.startLabel')}
         <select
           value={startStop?.stop_id ?? ''}
           onChange={(e) => {
@@ -23,7 +25,7 @@ export function StopSelector({ stops, startStop, endStop, onStartChange, onEndCh
             onStartChange(stop);
           }}
         >
-          <option value="">— Select start stop —</option>
+          <option value="">{t('stops.selectStart')}</option>
           {stops.map((s) => (
             <option key={`start-${s.stop_id}-${s.stop_sequence}`} value={s.stop_id}>
               {s.stop_sequence}. {s.stop_name}
@@ -32,7 +34,7 @@ export function StopSelector({ stops, startStop, endStop, onStartChange, onEndCh
         </select>
       </label>
       <label>
-        End of detour:
+        {t('stops.endLabel')}
         <select
           value={endStop?.stop_id ?? ''}
           onChange={(e) => {
@@ -40,7 +42,7 @@ export function StopSelector({ stops, startStop, endStop, onStartChange, onEndCh
             onEndChange(stop);
           }}
         >
-          <option value="">— Select end stop —</option>
+          <option value="">{t('stops.selectEnd')}</option>
           {stops
             .filter((s) => !startStop || s.stop_sequence > startStop.stop_sequence)
             .map((s) => (

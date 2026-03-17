@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Protocol } from 'pmtiles';
@@ -34,6 +35,7 @@ export function MapView({
   onMapClick,
   onWaypointDrag,
 }: Props) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -241,9 +243,9 @@ export function MapView({
       markersRef.current.push(marker);
     };
 
-    if (startStop) addStopMarker(startStop, '#E74C3C', 'Detour Start');
-    if (endStop) addStopMarker(endStop, '#E67E22', 'Detour End');
-  }, [startStop, endStop]);
+    if (startStop) addStopMarker(startStop, '#E74C3C', t('map.detourStart'));
+    if (endStop) addStopMarker(endStop, '#E67E22', t('map.detourEnd'));
+  }, [startStop, endStop, t]);
 
   // Waypoint markers
   useEffect(() => {
