@@ -192,11 +192,27 @@ function App() {
     document.documentElement.lang = i18n.language;
   }, [t, i18n.language, feedName, selectedTrip]);
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebarOnMobile = useCallback(() => {
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  }, []);
+
   const worker = workerReady ? workerRef.current : null;
 
   return (
     <div className="app-layout">
-      <aside className="sidebar">
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarOpen((s) => !s)}
+        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+      >
+        {sidebarOpen ? '\u2715' : '\u2630'}
+      </button>
+      <div
+        className={`sidebar-backdrop${sidebarOpen ? ' sidebar-backdrop--visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
         <h2>{t('appTitle')}</h2>
 
         {worker && (
@@ -226,7 +242,7 @@ function App() {
         )}
 
         {feedName && worker && (
-          <TripSelector worker={worker} onTripSelected={setSelectedTrip} />
+          <TripSelector worker={worker} onTripSelected={(trip) => { setSelectedTrip(trip); closeSidebarOnMobile(); }} />
         )}
 
         {selectedTrip && (
@@ -238,7 +254,7 @@ function App() {
               setStartStop(s);
               setEndStop(null);
             }}
-            onEndChange={setEndStop}
+            onEndChange={(s) => { setEndStop(s); closeSidebarOnMobile(); }}
           />
         )}
 
