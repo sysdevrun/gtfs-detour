@@ -197,6 +197,11 @@ function App() {
     if (window.innerWidth < 768) setSidebarOpen(false);
   }, []);
 
+  const handleTripSelected = useCallback((trip: TripInfo) => {
+    setSelectedTrip(trip);
+    closeSidebarOnMobile();
+  }, [closeSidebarOnMobile]);
+
   const worker = workerReady ? workerRef.current : null;
 
   return (
@@ -242,7 +247,7 @@ function App() {
         )}
 
         {feedName && worker && (
-          <TripSelector worker={worker} onTripSelected={(trip) => { setSelectedTrip(trip); closeSidebarOnMobile(); }} />
+          <TripSelector worker={worker} onTripSelected={handleTripSelected} />
         )}
 
         {selectedTrip && (
