@@ -1,30 +1,29 @@
 import * as Comlink from 'comlink';
-// @ts-expect-error no type declarations for sql.js
-import initSqlJs from 'sql.js';
 import { GtfsSqlJs } from 'gtfs-sqljs';
+import { createSqlJsAdapter } from 'gtfs-sqljs/adapters/sql-js';
 
 let gtfs: GtfsSqlJs;
 
 const api = {
   async loadFromUrl(zipUrl: string, wasmUrl: string, onProgress?: (p: number) => void) {
-    const SQL = await initSqlJs({ locateFile: () => wasmUrl });
+    const adapter = await createSqlJsAdapter({ locateFile: () => wasmUrl });
     gtfs = await GtfsSqlJs.fromZip(zipUrl, {
-      SQL,
+      adapter,
       onProgress: onProgress ? Comlink.proxy((info: { percentComplete: number }) => onProgress(info.percentComplete)) : undefined,
     });
   },
 
   async loadFromData(zipData: ArrayBuffer, wasmUrl: string, onProgress?: (p: number) => void) {
-    const SQL = await initSqlJs({ locateFile: () => wasmUrl });
+    const adapter = await createSqlJsAdapter({ locateFile: () => wasmUrl });
     gtfs = await GtfsSqlJs.fromZipData(new Uint8Array(zipData), {
-      SQL,
+      adapter,
       onProgress: onProgress ? Comlink.proxy((info: { percentComplete: number }) => onProgress(info.percentComplete)) : undefined,
     });
   },
 
-  getRoutes() {
+  async getRoutes() {
     const db = gtfs.getDatabase();
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       SELECT route_id, route_short_name, route_long_name,
              COALESCE(route_color, '') as route_color,
              COALESCE(route_text_color, '') as route_text_color
@@ -38,16 +37,16 @@ const api = {
       route_color: string;
       route_text_color: string;
     }> = [];
-    while (stmt.step()) {
-      routes.push(stmt.getAsObject() as never);
+    while (await stmt.step()) {
+      routes.push(await stmt.getAsObject() as never);
     }
-    stmt.free();
+    await stmt.free();
     return routes;
   },
 
-  getTripGroupsForRoute(routeId: string) {
+  async getTripGroupsForRoute(routeId: string) {
     const db = gtfs.getDatabase();
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       SELECT direction_id,
              COALESCE(trip_headsign, '') as trip_headsign,
              COALESCE(trip_short_name, '') as trip_short_name,
@@ -57,23 +56,23 @@ const api = {
       GROUP BY direction_id, trip_headsign, trip_short_name
       ORDER BY direction_id, trip_headsign, trip_short_name
     `);
-    stmt.bind([routeId]);
+    await stmt.bind([routeId]);
     const groups: Array<{
       direction_id: number;
       trip_headsign: string;
       trip_short_name: string;
       count: number;
     }> = [];
-    while (stmt.step()) {
-      groups.push(stmt.getAsObject() as never);
+    while (await stmt.step()) {
+      groups.push(await stmt.getAsObject() as never);
     }
-    stmt.free();
+    await stmt.free();
     return groups;
   },
 
-  getTripsForGroup(routeId: string, directionId: number, tripHeadsign: string, tripShortName: string) {
+  async getTripsForGroup(routeId: string, directionId: number, tripHeadsign: string, tripShortName: string) {
     const db = gtfs.getDatabase();
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       SELECT t.trip_id, t.trip_short_name, t.direction_id, t.trip_headsign, t.shape_id,
              r.route_short_name, r.route_long_name
       FROM trips t
@@ -85,7 +84,7 @@ const api = {
       ORDER BY t.trip_id
       LIMIT 50
     `);
-    stmt.bind([routeId, directionId, tripHeadsign, tripShortName]);
+    await stmt.bind([routeId, directionId, tripHeadsign, tripShortName]);
     const trips: Array<{
       trip_id: string;
       trip_short_name: string;
@@ -95,23 +94,23 @@ const api = {
       route_short_name: string;
       route_long_name: string;
     }> = [];
-    while (stmt.step()) {
-      trips.push(stmt.getAsObject() as never);
+    while (await stmt.step()) {
+      trips.push(await stmt.getAsObject() as never);
     }
-    stmt.free();
+    await stmt.free();
     return trips;
   },
 
-  getStopTimesForTrip(tripId: string) {
+  async getStopTimesForTrip(tripId: string) {
     const db = gtfs.getDatabase();
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       SELECT st.stop_id, st.stop_sequence, s.stop_name, s.stop_lat, s.stop_lon
       FROM stop_times st
       JOIN stops s ON st.stop_id = s.stop_id
       WHERE st.trip_id = ?
       ORDER BY st.stop_sequence
     `);
-    stmt.bind([tripId]);
+    await stmt.bind([tripId]);
     const stops: Array<{
       stop_id: string;
       stop_name: string;
@@ -119,10 +118,10 @@ const api = {
       stop_lon: number;
       stop_sequence: number;
     }> = [];
-    while (stmt.step()) {
-      stops.push(stmt.getAsObject() as never);
+    while (await stmt.step()) {
+      stops.push(await stmt.getAsObject() as never);
     }
-    stmt.free();
+    await stmt.free();
     return stops;
   },
 
@@ -130,8 +129,8 @@ const api = {
     return gtfs.getShapesToGeojson({ shapeId });
   },
 
-  close() {
-    if (gtfs) gtfs.close();
+  async close() {
+    if (gtfs) await gtfs.close();
   },
 };
 
